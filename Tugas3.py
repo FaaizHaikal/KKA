@@ -5,24 +5,49 @@
 #             :
 #             :
 #
-# [PROBLEM DESCRIPTION]
 
 class TreeNode:
     def __init__(self, floor, weight, heuristic):
         self.floor = floor
-        self.weight = weight
-        self.heuristic = heuristic
+        self.f = weight + heuristic
         self.children = []
 
     def add_child(self, obj):
         self.children.append(obj)
-    
-    # def __str__(self, level=0):
-    #     ret = " " * level * 4 + str(self.floor) + "(" + str(self.weight) + " " + str(self.heuristic) + ")" + "\n"
-    #     for child in self.children:
-    #         ret += child.__str__(level + 1)
-    #     return ret
 
+# FIND PATH USING A STAR
+def Astar(root_node):
+    current_node = root_node
+    list = []
+    last_floor = None
+    list.append(root_node)
+    while (len(list) > 0):
+        list.sort(key=lambda x: x.f)
+        current_node = list.pop(0)
+        if (current_node.heuristic == 0):
+            last_floor = current_node.floor
+            break
+        for child in current_node.children:
+            f = child.f
+            if (f < initial_f[child.floor]):
+                initial_f[child.floor] = f
+                list.append(child)
+                prev[child.floor] = current_node.floor
+
+    # PRINT PATH
+    path = []
+    path.append(last_floor)
+    while (last_floor != initial_floor):
+        last_floor = prev[last_floor]
+        path.append(last_floor)
+    
+    path.reverse()
+    for i in range(len(path)):
+        if (i == len(path) - 1):
+            print(path[i])
+        else:
+            print(path[i], end=" -> ")
+        
 # PERMUTATIONS OF FLOORS
 def create_elevator_orders(arr):
     if len(arr) == 0:
@@ -80,6 +105,10 @@ if __name__ == "__main__":
     source_with_people = {}
     destination_to_source = {}
     total_people = 0
+    initial_f = {}
+    initial_f[initial_floor] = 0
+    prev = {}
+    prev[initial_floor] = initial_floor
 
     # INPUT
     for i in range(request):
@@ -89,16 +118,20 @@ if __name__ == "__main__":
         people = int(people)
 
         floors.extend([source_floor, target_floor])         # LIST OF FLOORS
-            
+        prev[source_floor] = source_floor
+        prev[target_floor] = target_floor
         source_with_people[source_floor] = people           # SOURCE FLOOR WITH PEOPLE
         destination_to_source[target_floor] = source_floor  # DESTINATION FLOOR WITH SOURCE FLOOR
+        initial_f[source_floor] = float('inf')
+        initial_f[target_floor] = float('inf')
         total_people += people                              # TOTAL PEOPLE
 
     # CREATE VALID ELEVATOR ORDERS
     elevator_orders = create_elevator_orders(floors)
-    
+
     # CLEAN UP
     del floors
 
     # BUILD TREE
     root_node = build_tree_from_paths(elevator_orders)
+    Astar(root_node)
