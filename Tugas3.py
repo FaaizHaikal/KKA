@@ -9,11 +9,21 @@
 class TreeNode:
     def __init__(self, floor, weight, heuristic):
         self.floor = floor
+        self.w = weight
+        self.heuristic = heuristic
         self.f = weight + heuristic
         self.children = []
 
     def add_child(self, obj):
         self.children.append(obj)
+
+# PRINT PATH
+def print_path(path):
+    for i in range(len(path)):
+        if (i == len(path) - 1):
+            print(path[i])
+        else:
+            print(path[i], end=" -> ")
 
 # FIND PATH USING A STAR
 def Astar(root_node):
@@ -34,7 +44,6 @@ def Astar(root_node):
                 list.append(child)
                 prev[child.floor] = current_node.floor
 
-    # PRINT PATH
     path = []
     path.append(last_floor)
     while (last_floor != initial_floor):
@@ -42,11 +51,42 @@ def Astar(root_node):
         path.append(last_floor)
     
     path.reverse()
-    for i in range(len(path)):
-        if (i == len(path) - 1):
-            print(path[i])
-        else:
-            print(path[i], end=" -> ")
+
+    return path
+
+# FIND PATH USING Iterative-Deepening A*
+def IDAstar(root_node, heuristic):
+    def DFS(node, bound, path):
+        f = node.f
+
+        if f > bound:
+            return f, None
+        if node.heuristic == 0:
+            return "FOUND", path + [node.floor]
+
+        min = float("inf")
+        best_path = None
+
+        for child in node.children:
+            new_bound = child.f
+            search_temporary, child_path = DFS(child, bound, path + [node.floor])
+            if search_temporary == "FOUND":
+                return "FOUND", child_path
+            if search_temporary < min:
+                min = search_temporary
+                best_path = child_path
+        return min, best_path
+
+    f_bound = root_node.f
+    path = []
+
+    while True:
+        search_temporary, path = DFS(root_node, f_bound, [])
+        if search_temporary == "FOUND":
+            return path
+        if search_temporary == float("inf"):
+            return None
+        f_bound = search_temporary
         
 # PERMUTATIONS OF FLOORS
 def create_elevator_orders(arr):
@@ -134,4 +174,11 @@ if __name__ == "__main__":
 
     # BUILD TREE
     root_node = build_tree_from_paths(elevator_orders)
-    Astar(root_node)
+
+    # A STAR
+    # print("A* Algorithm...")
+    # print_path(Astar(root_node))
+
+    # IDA STAR
+    print("IDA* Algorithm...")
+    print_path(IDAstar(root_node, total_people))
